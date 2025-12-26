@@ -1,7 +1,8 @@
 import os
 import tempfile
-from objtokmz import read_georef, obj_to_dae, dae_to_kml
 import bs4
+import pytest
+from objtokmz import read_georef, obj_to_dae, dae_to_kml
 
 
 def test_read_georef():
@@ -16,6 +17,18 @@ def test_read_georef():
         assert abs(lon - 25.9) < 0.1
         assert abs(lat - 48.25) < 0.1
         assert abs(alt + 33.58) < 0.1
+
+
+def test_read_georef_invalid():
+    georef_content = "INVALID DATA\n"
+
+    with tempfile.NamedTemporaryFile() as tmpfile:
+        tmpfile.write(georef_content.encode('utf-8'))
+        tmpfile_path = tmpfile.name
+        tmpfile.flush()
+
+        with pytest.raises(Exception, match="Invalid georeference file format"):
+            read_georef(tmpfile_path)
 
 
 def test_obj_to_dae():

@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+"""
+Convert OBJ file to KMZ with georeferencing
+"""
 import os
 import pyassimp
 import simplekml
