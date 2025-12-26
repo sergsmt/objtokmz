@@ -9,7 +9,7 @@ def test_read_georef():
     georef_content = "WGS84 UTM 35N\n418574 5345544\n"
 
     with tempfile.NamedTemporaryFile() as tmpfile:
-        tmpfile.write(georef_content.encode('utf-8'))
+        tmpfile.write(georef_content.encode("utf-8"))
         tmpfile_path = tmpfile.name
         tmpfile.flush()
 
@@ -23,7 +23,7 @@ def test_read_georef_invalid():
     georef_content = "INVALID DATA\n"
 
     with tempfile.NamedTemporaryFile() as tmpfile:
-        tmpfile.write(georef_content.encode('utf-8'))
+        tmpfile.write(georef_content.encode("utf-8"))
         tmpfile_path = tmpfile.name
         tmpfile.flush()
 
@@ -35,10 +35,7 @@ def test_obj_to_dae():
     # Create a temporary OBJ file with a simple cube
 
     mtl_content = ""
-    png_files = [
-        "texture1.png",
-        "texture2.png"
-    ]
+    png_files = ["texture1.png", "texture2.png"]
 
     for i, png_file in enumerate(png_files):
         mtl_content += f"""
@@ -71,23 +68,22 @@ f 4 3 7 8
 f 1 2 6 5
 """
 
-    with tempfile.TemporaryDirectory() as srcdir, \
-         tempfile.TemporaryDirectory() as dstdir:
+    with tempfile.TemporaryDirectory() as srcdir, tempfile.TemporaryDirectory() as dstdir:
 
         obj_path = os.path.join(srcdir, "cube.obj")
         mtl_path = os.path.join(srcdir, "cube.mtl")
         dae_path = os.path.join(dstdir, "cube.dae")
 
-        with open(obj_path, 'w') as f:
+        with open(obj_path, "w") as f:
             f.write(obj_content)
 
-        with open(mtl_path, 'w') as f:
+        with open(mtl_path, "w") as f:
             f.write(mtl_content)
 
         # Create dummy PNG files
         for png_file in png_files:
             png_path = os.path.join(srcdir, png_file)
-            with open(png_path, 'wb') as f:
+            with open(png_path, "wb") as f:
                 f.write(os.urandom(1024))  # 1KB random content
 
         # Convert OBJ to DAE
@@ -109,7 +105,7 @@ def test_dae_to_kml():
         kml_dir = tempdir
 
         # Create a dummy DAE file
-        with open(dae_path, 'w') as f:
+        with open(dae_path, "w") as f:
             f.write("<COLLADA></COLLADA>")
 
         lat, lon, alt = 48.25, 25.9, 100.0
@@ -120,16 +116,16 @@ def test_dae_to_kml():
         assert os.path.exists(kml_path)
 
         # Verify KML content
-        with open(kml_path, 'r') as f:
+        with open(kml_path, "r") as f:
             kml_content = f.read()
-            soup = bs4.BeautifulSoup(kml_content, 'xml')
-            root = soup.find('kml')
+            soup = bs4.BeautifulSoup(kml_content, "xml")
+            root = soup.find("kml")
             assert root is not None
-            model = soup.find('Model')
-            location = model.find('Location')
-            latitude = float(location.find('latitude').text)
-            longitude = float(location.find('longitude').text)
-            altitude = float(location.find('altitude').text)
+            model = soup.find("Model")
+            location = model.find("Location")
+            latitude = float(location.find("latitude").text)
+            longitude = float(location.find("longitude").text)
+            altitude = float(location.find("altitude").text)
 
             assert abs(latitude - lat) < 0.0001
             assert abs(longitude - lon) < 0.0001
@@ -140,7 +136,7 @@ def test_obj_to_kmz():
     # Use mocks for read_georef, obj_to_dae, dae_to_kml
     import os
     from unittest import mock
-    from objtokmz import obj_to_kmz as obj_to_kmz_func  
+    from objtokmz import obj_to_kmz as obj_to_kmz_func
 
     with tempfile.TemporaryDirectory() as tempdir:
         obj_path = os.path.join(tempdir, "model.obj")
@@ -148,20 +144,26 @@ def test_obj_to_kmz():
         kmz_path = os.path.join(tempdir, "output.kmz")
 
         # Create dummy OBJ file
-        with open(obj_path, 'w') as f:
+        with open(obj_path, "w") as f:
             f.write("# Dummy OBJ content")
 
         # Create dummy georef file
-        with open(georef_path, 'w') as f:
+        with open(georef_path, "w") as f:
             f.write("WGS84 UTM 35N\n418574 5345544\n")
 
-        with mock.patch('objtokmz.read_georef', return_value=(25.9, 48.25, 100.0)) as mock_read_georef, \
-             mock.patch('objtokmz.obj_to_dae') as mock_obj_to_dae, \
-             mock.patch('objtokmz.dae_to_kml') as mock_dae_to_kml:
+        with mock.patch(
+            "objtokmz.read_georef", return_value=(25.9, 48.25, 100.0)
+        ) as mock_read_georef, mock.patch(
+            "objtokmz.obj_to_dae"
+        ) as mock_obj_to_dae, mock.patch(
+            "objtokmz.dae_to_kml"
+        ) as mock_dae_to_kml:
             obj_to_kmz_func(obj_path, georef_path, kmz_path)
             mock_read_georef.assert_called_once_with(georef_path)
             mock_obj_to_dae.assert_called_once_with(obj_path, mock.ANY)
-            mock_dae_to_kml.assert_called_once_with(mock.ANY, 48.25, 25.9, 100.0, mock.ANY)
+            mock_dae_to_kml.assert_called_once_with(
+                mock.ANY, 48.25, 25.9, 100.0, mock.ANY
+            )
 
         # Check if KMZ file is created
         assert os.path.exists(kmz_path)

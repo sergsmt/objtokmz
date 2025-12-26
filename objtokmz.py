@@ -41,7 +41,7 @@ def read_georef(georef_path: str) -> tuple[float, float, float]:
 
     """
 
-    with open(georef_path, 'r') as f:
+    with open(georef_path, "r") as f:
         line1 = f.readline(99).strip()
         line2 = f.readline(99).strip()
 
@@ -56,9 +56,9 @@ def read_georef(georef_path: str) -> tuple[float, float, float]:
     easting = int(match2.group(1))
     northing = int(match2.group(2))
 
-    south = hemisphere == 'S'
+    south = hemisphere == "S"
 
-    crs = CRS.from_dict({'proj': 'utm', 'zone': zone, 'south': south})
+    crs = CRS.from_dict({"proj": "utm", "zone": zone, "south": south})
 
     # Horizontal transformer from UTM to WGS84
     h_transformer = Transformer.from_crs(crs, CRS.from_epsg("4326"), always_xy=True)
@@ -66,9 +66,9 @@ def read_georef(georef_path: str) -> tuple[float, float, float]:
 
     # Vertical transformer from WGS84 ellipsoidal to WGS84 + EGM96
     v_transformer = Transformer.from_crs(
-        "EPSG:4979",        # WGS84 ellipsoidal
-        "EPSG:4326+5773",   # WGS84 + EGM96
-        always_xy=True
+        "EPSG:4979",  # WGS84 ellipsoidal
+        "EPSG:4326+5773",  # WGS84 + EGM96
+        always_xy=True,
     )
     lon, lat, alt = v_transformer.transform(lon, lat, 0.0)
 
@@ -91,7 +91,7 @@ def obj_to_dae(obj_path: str, dae_path: str):
     # Convert OBJ to DAE
     # mtl will be handled by pyassimp automatically
     with pyassimp.load(obj_path) as scene:
-        pyassimp.export(scene, dae_path, file_type='collada')
+        pyassimp.export(scene, dae_path, file_type="collada")
 
     obj_dir = os.path.dirname(obj_path)
     dae_dir = os.path.dirname(dae_path)
@@ -163,8 +163,8 @@ def obj_to_kmz(obj_path: str, georef_path: str, kmz_path: str):
         dae_to_kml(dae_path, lat, lon, alt, tempdir)
 
         # Create KMZ (zip) archive
-        shutil.make_archive(kmz_path.replace('.kmz', ''), 'zip', tempdir)
-        shutil.move(kmz_path.replace('.kmz', '') + '.zip', kmz_path)
+        shutil.make_archive(kmz_path.replace(".kmz", ""), "zip", tempdir)
+        shutil.move(kmz_path.replace(".kmz", "") + ".zip", kmz_path)
 
 
 if __name__ == "__main__":
