@@ -13,10 +13,9 @@ def test_read_georef():
         tmpfile_path = tmpfile.name
         tmpfile.flush()
 
-        lon, lat, alt = read_georef(tmpfile_path)
+        lon, lat = read_georef(tmpfile_path)
         assert abs(lon - 25.9) < 0.1
         assert abs(lat - 48.25) < 0.1
-        assert abs(alt + 33.58) < 0.1
 
 
 def test_read_georef_invalid():
@@ -108,9 +107,9 @@ def test_dae_to_kml():
         with open(dae_path, "w") as f:
             f.write("<COLLADA></COLLADA>")
 
-        lat, lon, alt = 48.25, 25.9, 100.0
+        lat, lon = 48.25, 25.9
 
-        dae_to_kml(dae_path, lat, lon, alt, kml_dir)
+        dae_to_kml(dae_path, lat, lon, kml_dir)
 
         kml_path = os.path.join(kml_dir, "model.kml")
         assert os.path.exists(kml_path)
@@ -129,7 +128,7 @@ def test_dae_to_kml():
 
             assert abs(latitude - lat) < 0.0001
             assert abs(longitude - lon) < 0.0001
-            assert abs(altitude - alt) < 0.0001
+            assert abs(altitude - 0) < 0.0001
 
 
 def test_obj_to_kmz():
@@ -152,7 +151,7 @@ def test_obj_to_kmz():
             f.write("WGS84 UTM 35N\n418574 5345544\n")
 
         with mock.patch(
-            "objtokmz.read_georef", return_value=(25.9, 48.25, 100.0)
+            "objtokmz.read_georef", return_value=(25.9, 48.25)
         ) as mock_read_georef, mock.patch(
             "objtokmz.obj_to_dae"
         ) as mock_obj_to_dae, mock.patch(
@@ -162,7 +161,7 @@ def test_obj_to_kmz():
             mock_read_georef.assert_called_once_with(georef_path)
             mock_obj_to_dae.assert_called_once_with(obj_path, mock.ANY)
             mock_dae_to_kml.assert_called_once_with(
-                mock.ANY, 48.25, 25.9, 100.0, mock.ANY
+                mock.ANY, 48.25, 25.9, mock.ANY
             )
 
         # Check if KMZ file is created

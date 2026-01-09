@@ -7,3 +7,9 @@ Convert OBJ file to KMZ with georeferencing
 ```
 python ./objtokmz.py <path/to/model.obj> <path/to/georeferencing_model_geo.txt> <path/to/resulting.kmz>
 ```
+
+## Run tests:
+
+```
+pytest ./test_objtokmz.py
+```

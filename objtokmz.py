@@ -25,7 +25,7 @@ GEOREF_LINE1 = re.compile(r"^WGS84 UTM (\d+)(N|S)$")
 GEOREF_LINE2 = re.compile(r"^(\d+)\s+(\d+)$")
 
 
-def read_georef(georef_path: str) -> tuple[float, float, float]:
+def read_georef(georef_path: str) -> tuple[float, float]:
     """
     Read georeference from a file and return latitude and longitude
 
@@ -37,7 +37,7 @@ def read_georef(georef_path: str) -> tuple[float, float, float]:
         georef_path (str): Path to the georeference file
 
     Returns:
-        tuple[float, float, float]: Longitude, Latitude, and Altitude
+        tuple[float, float]: Longitude, Latitude
 
     """
 
@@ -61,18 +61,10 @@ def read_georef(georef_path: str) -> tuple[float, float, float]:
     crs = CRS.from_dict({"proj": "utm", "zone": zone, "south": south})
 
     # Horizontal transformer from UTM to WGS84
-    h_transformer = Transformer.from_crs(crs, CRS.from_epsg("4326"), always_xy=True)
-    lon, lat = h_transformer.transform(easting, northing)
+    transformer = Transformer.from_crs(crs, CRS.from_epsg("4326"), always_xy=True)
+    lon, lat = transformer.transform(easting, northing)
 
-    # Vertical transformer from WGS84 ellipsoidal to WGS84 + EGM96
-    v_transformer = Transformer.from_crs(
-        "EPSG:4979",  # WGS84 ellipsoidal
-        "EPSG:4326+5773",  # WGS84 + EGM96
-        always_xy=True,
-    )
-    lon, lat, alt = v_transformer.transform(lon, lat, 0.0)
-
-    return lon, lat, alt
+    return lon, lat
 
 
 def obj_to_dae(obj_path: str, dae_path: str):
@@ -108,7 +100,7 @@ def obj_to_dae(obj_path: str, dae_path: str):
             logger.warning(f"Image file {img_source} not found.")
 
 
-def dae_to_kml(dae_path: str, lat: float, lon: float, alt: float, kml_dir: str):
+def dae_to_kml(dae_path: str, lat: float, lon: float, kml_dir: str):
     """
     Create a KML file referencing the DAE model with georeferencing
 
@@ -129,7 +121,7 @@ def dae_to_kml(dae_path: str, lat: float, lon: float, alt: float, kml_dir: str):
     model.link.href = dae_name
     model.location.latitude = lat
     model.location.longitude = lon
-    model.location.altitude = alt  # - 320
+    model.location.altitude = 0  # we don't have altitude info
     model.altitudemode = simplekml.AltitudeMode.absolute
     model.orientation.heading = 180
     model.orientation.tilt = 270
@@ -150,7 +142,7 @@ def obj_to_kmz(obj_path: str, georef_path: str, kmz_path: str):
     """
 
     # Read georeference
-    lon, lat, alt = read_georef(georef_path)
+    lon, lat = read_georef(georef_path)
 
     with tempfile.TemporaryDirectory() as tempdir:
 
@@ -160,7 +152,7 @@ def obj_to_kmz(obj_path: str, georef_path: str, kmz_path: str):
         obj_to_dae(obj_path, dae_path)
 
         # Create KML in tempdir
-        dae_to_kml(dae_path, lat, lon, alt, tempdir)
+        dae_to_kml(dae_path, lat, lon, tempdir)
 
         # Create KMZ (zip) archive
         shutil.make_archive(kmz_path.replace(".kmz", ""), "zip", tempdir)
